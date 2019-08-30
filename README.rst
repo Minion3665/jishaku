@@ -180,7 +180,7 @@ Trying to use this command with a user that is not in the current guild (if appl
 In guilds, this only works in channels of the same guild, but can work across guilds if ``in`` is used in a DM.
 
 Whats in this version of jsk?
-~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ``update`` command that auto syncs with this git
 ``embedhelp`` command that toggles embedded help
 a few punctuational fixes
