@@ -134,9 +134,13 @@ class Jishaku(commands.Cog):  # pylint: disable=too-many-public-methods
         This command on its own gives a status brief.
         All other functionality is within its subcommands.
         """
+        _start_time = time.time()
+        msg = await ctx.send(">Loading...")
+        _end_time =   time.time()
+        _ping_time = round((_end_time - _start_time)*1000, 2)
 
         summary = [
-            f"Jishaku v{__version__}, discord.py `{package_version('discord.py')}`, "
+            f">>> Jishaku v{__version__}, discord.py `{package_version('discord.py')}`, "
             f"`Python {sys.version}` on `{sys.platform}`".replace("\n", ""),
             f"Module was loaded {humanize.naturaltime(self.load_time)}, "
             f"cog was loaded {humanize.naturaltime(self.start_time)}.",
@@ -174,9 +178,9 @@ class Jishaku(commands.Cog):  # pylint: disable=too-many-public-methods
         else:
             summary.append(f"This bot is not sharded and can see {cache_summary}.")
 
-        summary.append(f"Average websocket latency: {round(self.bot.latency * 1000, 2)}ms")
+        summary.append(f"Average websocket latency: {round(self.bot.latency * 1000, 2)}ms, with {_ping_time}ms delay.")
 
-        await ctx.send("\n".join(summary))
+        await msg.edit(content="\n".join(summary))
 
     # Meta commands
 
