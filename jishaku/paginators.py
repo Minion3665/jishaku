@@ -305,6 +305,8 @@ class PaginatorEmbedInterface(PaginatorInterface):
     def send_kwargs(self) -> dict:
         display_page = self.display_page
         self._embed.set_author(name=self.bot.user.display_name, icon_url=self.bot.user.avatar_url_as(format='png'))
+        self._embed.color = discord.Color.blurple()
+        self._embed.timestamp = datetime.utcnow()
         self._embed.description = self.pages[display_page]
         self._embed.set_footer(text=f'Page {display_page + 1}/{self.page_count}')
         return {'embed': self._embed}
