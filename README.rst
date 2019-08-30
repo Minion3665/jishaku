@@ -182,6 +182,10 @@ In guilds, this only works in channels of the same guild, but can work across gu
 Whats in this version of jsk?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ``update`` command that auto syncs with this git
+
 ``embedhelp`` command that toggles embedded help
+
 a few punctuational fixes
+
 colored help embeds
+
