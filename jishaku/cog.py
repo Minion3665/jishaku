@@ -196,6 +196,14 @@ class Jishaku(commands.Cog):  # pylint: disable=too-many-public-methods
                 self.bot.help_command = DefaultEmbedPaginatorHelp()
                 return await ctx.send("Set help command to the embedded help command.")
 
+    @jsk.command(name="update")
+    async def jsk_update(self, ctx):
+        """Updates jsk from the github repo.
+
+        This is basically an alias for `jsk sh` but it runs the command for you."""
+        cb = codeblock_converter('python -m pip install -U git+https://github.com/dragdev-studios/jishaku@master#egg=jishaku --upgrade')
+        return await ctx.invoke(self.bot.get_command('jsk sh'), argument=cb)
+
     @jsk.command(name="hide")
     async def jsk_hide(self, ctx: commands.Context, *, mode: bool = None):
         """
@@ -253,7 +261,7 @@ class Jishaku(commands.Cog):  # pylint: disable=too-many-public-methods
                               f" invoked at {task.ctx.message.created_at.strftime('%Y-%m-%d %H:%M:%S')} UTC")
 
     # Bot management commands
-    @jsk.command(name="load", aliases=["reload"])
+    @jsk.command(name="load", aliases=["reload", 'r', 'l'])
     async def jsk_load(self, ctx: commands.Context, *extensions: ExtensionConverter):
         """
         Loads or reloads the given extension names.
@@ -640,7 +648,7 @@ class Jishaku(commands.Cog):  # pylint: disable=too-many-public-methods
 
         async with ReplResponseReactor(ctx.message):
             with self.submit(ctx):
-                paginator = WrappedPaginator(prefix="```sh", max_size=1985)
+                paginator = WrappedPaginator(prefix="```sh", max_size=1000)
                 paginator.add_line(f"$ {argument.content}\n")
 
                 interface = PaginatorInterface(ctx.bot, paginator, owner=ctx.author)
