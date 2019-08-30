@@ -14,6 +14,7 @@ Paginator-related tools and interfaces for Jishaku.
 import asyncio
 import collections
 import re
+from datetime import datetime
 
 import discord
 from discord.ext import commands
@@ -297,12 +298,13 @@ class PaginatorEmbedInterface(PaginatorInterface):
     """
 
     def __init__(self, *args, **kwargs):
-        self._embed = kwargs.pop('embed', None) or discord.Embed()
+        self._embed = kwargs.pop('embed', None) or discord.Embed(color=discord.Color.blurple(), timestamp=datetime.utcnow())
         super().__init__(*args, **kwargs)
 
     @property
     def send_kwargs(self) -> dict:
         display_page = self.display_page
+        self._embed.set_author(name=self.bot.user.display_name, icon_url=self.bot.user.avatar_url_as(format='png'))
         self._embed.description = self.pages[display_page]
         self._embed.set_footer(text=f'Page {display_page + 1}/{self.page_count}')
         return {'embed': self._embed}

@@ -38,6 +38,7 @@ from jishaku.meta import __version__
 from jishaku.models import copy_context_with
 from jishaku.modules import ExtensionConverter, package_version
 from jishaku.paginators import PaginatorInterface, WrappedFilePaginator, WrappedPaginator
+from jishaku.help_command import MinimalEmbedPaginatorHelp, DefaultEmbedPaginatorHelp
 from jishaku.repl import AsyncCodeExecutor, Scope, all_inspections, get_var_dict_from_ctx
 from jishaku.shell import ShellReader
 from jishaku.voice import BasicYouTubeDLSource, connected_check, playing_check, vc_check, youtube_dl
@@ -78,6 +79,7 @@ class Jishaku(commands.Cog):  # pylint: disable=too-many-public-methods
         self.start_time = datetime.datetime.now()
         self.tasks = collections.deque()
         self.task_count: int = 0
+        self._help_command = bot.help_command
 
     @property
     def scope(self):
@@ -142,23 +144,28 @@ class Jishaku(commands.Cog):  # pylint: disable=too-many-public-methods
         ]
 
         if psutil:
-            proc = psutil.Process()
+            try:
+                proc = psutil.Process()
 
-            with proc.oneshot():
-                mem = proc.memory_full_info()
-                summary.append(f"Using {humanize.naturalsize(mem.rss)} physical memory and "
-                               f"{humanize.naturalsize(mem.vms)} virtual memory, "
-                               f"{humanize.naturalsize(mem.uss)} of which unique to this process.")
+                with proc.oneshot():
+                    mem = proc.memory_full_info()
+                    summary.append(f"Using {humanize.naturalsize(mem.rss)} physical memory and "
+                                   f"{humanize.naturalsize(mem.vms)} virtual memory, "
+                                   f"{humanize.naturalsize(mem.uss)} of which unique to this process.")
 
-                name = proc.name()
-                pid = proc.pid
-                thread_count = proc.num_threads()
+                    name = proc.name()
+                    pid = proc.pid
+                    thread_count = proc.num_threads()
 
-                summary.append(f"Running on PID {pid} (`{name}`) with {thread_count} thread(s).")
+                    summary.append(f"Running on PID {pid} (`{name}`) with {thread_count} thread(s).")
 
-                summary.append("")  # blank line
+                    summary.append("")  # blank line
+            except:
+                summary.append("Was unable to get Psutil information.")
+                summary.append(" ")
 
-        cache_summary = f"{len(self.bot.guilds)} guild(s) and {len(self.bot.users)} user(s)"
+        cache_summary = f"{len(self.bot.guilds)} guild(s), {len(list(self.bot.get_all_channels()))} channel(s)" \
+                        f" {len(self.bot.users)} user(s)"
 
         if isinstance(self.bot, discord.AutoShardedClient):
             summary.append(f"This bot is automatically sharded and can see {cache_summary}.")
@@ -172,29 +179,36 @@ class Jishaku(commands.Cog):  # pylint: disable=too-many-public-methods
         await ctx.send("\n".join(summary))
 
     # Meta commands
+
+    @jsk.command(name="embedhelp")
+    async def jsk_help_toggle(self, ctx, minimal: bool = True):
+        """Switches between jsk's embedded help command and the current help command."""
+        if isinstance(self.bot.help_command, (MinimalEmbedPaginatorHelp, DefaultEmbedPaginatorHelp)):
+            self.bot.help_command = self._help_command
+            return await ctx.send("Returned to the original help command.")
+        else:
+            if minimal:
+                self._help_command = self.bot.help_command
+                self.bot.help_command = MinimalEmbedPaginatorHelp()
+                return await ctx.send("Set help command to the minimal embedded help command.")
+            else:
+                self._help_command = self.bot.help_command
+                self.bot.help_command = DefaultEmbedPaginatorHelp()
+                return await ctx.send("Set help command to the embedded help command.")
+
     @jsk.command(name="hide")
-    async def jsk_hide(self, ctx: commands.Context):
+    async def jsk_hide(self, ctx: commands.Context, *, mode: bool = None):
         """
-        Hides Jishaku from the help command.
+        Toggles hiding Jishaku from the help command.
         """
-
-        if self.jsk.hidden:
-            return await ctx.send("Jishaku is already hidden.")
-
-        self.jsk.hidden = True
-        await ctx.send("Jishaku is now hidden.")
-
-    @jsk.command(name="show")
-    async def jsk_show(self, ctx: commands.Context):
-        """
-        Shows Jishaku in the help command.
-        """
-
-        if not self.jsk.hidden:
-            return await ctx.send("Jishaku is already visible.")
-
-        self.jsk.hidden = False
-        await ctx.send("Jishaku is now visible.")
+        self.jsk.hidden = True if not self.jsk.hidden else False
+        if mode is not None:
+            self.jsk.hidden = mode
+        new = {
+            True: "Hidden",
+            False: "Shown"
+        }
+        await ctx.send("Jishaku is now {}.".format(new[self.jsk.hidden]))
 
     @jsk.command(name="tasks")
     async def jsk_tasks(self, ctx: commands.Context):
@@ -263,10 +277,10 @@ class Jishaku(commands.Cog):  # pylint: disable=too-many-public-methods
 
                 paginator.add_line(
                     f"{icon}\N{WARNING SIGN} `{extension}`\n```py\n{traceback_data}\n```",
-                    empty=True
+                    empty=False
                 )
             else:
-                paginator.add_line(f"{icon} `{extension}`", empty=True)
+                paginator.add_line(f"{icon} `{extension}`", empty=False)
 
         for page in paginator.pages:
             await ctx.send(page)
@@ -290,10 +304,10 @@ class Jishaku(commands.Cog):  # pylint: disable=too-many-public-methods
 
                 paginator.add_line(
                     f"{icon}\N{WARNING SIGN} `{extension}`\n```py\n{traceback_data}\n```",
-                    empty=True
+                    empty=False
                 )
             else:
-                paginator.add_line(f"{icon} `{extension}`", empty=True)
+                paginator.add_line(f"{icon} `{extension}`", empty=False)
 
         for page in paginator.pages:
             await ctx.send(page)
@@ -304,7 +318,7 @@ class Jishaku(commands.Cog):  # pylint: disable=too-many-public-methods
         Logs this bot out.
         """
 
-        await ctx.send("Logging out now..")
+        await ctx.send("Logging out now.")
         await ctx.bot.logout()
 
     # Command-invocation commands
