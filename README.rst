@@ -52,7 +52,7 @@ Or the development version:
 |                                                                                           |
 | .. code:: sh                                                                              |
 |                                                                                           |
-|     python3 -m pip install -U git+https://github.com/Gorialis/jishaku@master#egg=jishaku  |
+|     python3 -m pip install -U git+https://github.com/dragdev-studios/jishaku@master#egg=jishaku  |
 |                                                                                           |
 | From GitLab:                                                                              |
 |                                                                                           |
