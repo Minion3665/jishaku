@@ -79,7 +79,7 @@ class Jishaku(commands.Cog):  # pylint: disable=too-many-public-methods
         self.start_time = datetime.datetime.now()
         self.tasks = collections.deque()
         self.task_count: int = 0
-        self._help_command = bot.help_command
+        self.bot._help_command = bot.help_command
 
     @property
     def scope(self):
@@ -188,15 +188,15 @@ class Jishaku(commands.Cog):  # pylint: disable=too-many-public-methods
     async def jsk_help_toggle(self, ctx, minimal: bool = True):
         """Switches between jsk's embedded help command and the current help command."""
         if isinstance(self.bot.help_command, (MinimalEmbedPaginatorHelp, DefaultEmbedPaginatorHelp)):
-            self.bot.help_command = self._help_command
+            self.bot.help_command = self.bot.__help_command
             return await ctx.send("Returned to the original help command.")
         else:
             if minimal:
-                self._help_command = self.bot.help_command
+                self.bot._help_command = self.bot.help_command
                 self.bot.help_command = MinimalEmbedPaginatorHelp()
                 return await ctx.send("Set help command to the minimal embedded help command.")
             else:
-                self._help_command = self.bot.help_command
+                self.bot._help_command = self.bot.help_command
                 self.bot.help_command = DefaultEmbedPaginatorHelp()
                 return await ctx.send("Set help command to the embedded help command.")
 
