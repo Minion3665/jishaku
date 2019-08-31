@@ -79,7 +79,7 @@ class Jishaku(commands.Cog):  # pylint: disable=too-many-public-methods
         self.start_time = datetime.datetime.now()
         self.tasks = collections.deque()
         self.task_count: int = 0
-        self.bot._help_command = bot.help_command
+        self.bot.old_help_command = bot.help_command
 
     @property
     def scope(self):
@@ -135,8 +135,8 @@ class Jishaku(commands.Cog):  # pylint: disable=too-many-public-methods
         All other functionality is within its subcommands.
         """
         _start_time = time.time()
-        msg = await ctx.send(">Loading...")
-        _end_time =   time.time()
+        msg = await ctx.send("> Loading...")
+        _end_time =  time.time()
         _ping_time = round((_end_time - _start_time)*1000, 2)
 
         summary = [
@@ -188,15 +188,15 @@ class Jishaku(commands.Cog):  # pylint: disable=too-many-public-methods
     async def jsk_help_toggle(self, ctx, minimal: bool = True):
         """Switches between jsk's embedded help command and the current help command."""
         if isinstance(self.bot.help_command, (MinimalEmbedPaginatorHelp, DefaultEmbedPaginatorHelp)):
-            self.bot.help_command = self.bot.__help_command
+            self.bot.help_command = self.bot.old_help_command
             return await ctx.send("Returned to the original help command.")
         else:
             if minimal:
-                self.bot._help_command = self.bot.help_command
+                self.bot.old_help_command = self.bot.help_command
                 self.bot.help_command = MinimalEmbedPaginatorHelp()
                 return await ctx.send("Set help command to the minimal embedded help command.")
             else:
-                self.bot._help_command = self.bot.help_command
+                self.bot.old_help_command = self.bot.help_command
                 self.bot.help_command = DefaultEmbedPaginatorHelp()
                 return await ctx.send("Set help command to the embedded help command.")
 
@@ -205,7 +205,16 @@ class Jishaku(commands.Cog):  # pylint: disable=too-many-public-methods
         """Updates jsk from the github repo.
 
         This is basically an alias for `jsk sh` but it runs the command for you."""
-        cb = codeblock_converter('python -m pip install -U git+https://github.com/dragdev-studios/jishaku@master#egg=jishaku --upgrade')
+        pip = 'pip'
+        if psutil:
+            if psutil.LINUX:
+                pip = "pip3"
+            elif psutil.MACOS:
+                pip = "pip"
+            else:
+                pip = "pip"
+        cb = codeblock_converter(f'{pip} install -U git+https://github.com/dragdev-studios/jishaku@master'
+                                 f'#egg=jishaku --upgrade')
         return await ctx.invoke(self.bot.get_command('jsk sh'), argument=cb)
 
     @jsk.command(name="hide")
