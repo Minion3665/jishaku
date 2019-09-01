@@ -136,7 +136,7 @@ class Jishaku(commands.Cog):  # pylint: disable=too-many-public-methods
         """
         _start_time = time.time()
         msg = await ctx.send("> Loading...")
-        _end_time =  time.time()
+        _end_time = time.time()
         _ping_time = round((_end_time - _start_time)*1000, 2)
 
         summary = [
@@ -215,7 +215,16 @@ class Jishaku(commands.Cog):  # pylint: disable=too-many-public-methods
                 pip = "pip"
         cb = codeblock_converter(f'{pip} install -U git+https://github.com/dragdev-studios/jishaku@master'
                                  f'#egg=jishaku --upgrade')
-        return await ctx.invoke(self.bot.get_command('jsk sh'), argument=cb)
+        status = await ctx.invoke(self.bot.get_command('jsk sh'), argument=cb)
+        if status in [0, 'done']:
+            m = await ctx.send("Update successfully downloaded. applying...")
+            try:
+                await self.bot.reload_extension('jishaku')
+            except:
+                await m.edit(content="It looks like an error occurred while applying the update. your jishaku version"
+                                     " has been reverted to pre-update to keep it working. try updating again in a few hours.")
+            else:
+                await m.edit(content="Updates successfully applied. have a good time!")
 
     @jsk.command(name="hide")
     async def jsk_hide(self, ctx: commands.Context, *, mode: bool = None):
@@ -674,6 +683,7 @@ class Jishaku(commands.Cog):  # pylint: disable=too-many-public-methods
                         await interface.add_line(line)
 
                 await interface.add_line(f"\n[status] Return code {reader.close_code}")
+                return reader.close_code
 
     @jsk.command(name="git")
     async def jsk_git(self, ctx: commands.Context, *, argument: codeblock_converter):
