@@ -219,7 +219,7 @@ class Jishaku(commands.Cog):  # pylint: disable=too-many-public-methods
         if status in [0, 'done']:
             m = await ctx.send("Update successfully downloaded. applying...")
             try:
-                await self.bot.reload_extension('jishaku')
+                self.bot.reload_extension('jishaku')
             except:
                 await m.edit(content="It looks like an error occurred while applying the update. your jishaku version"
                                      " has been reverted to pre-update to keep it working. try updating again in a few hours.")
