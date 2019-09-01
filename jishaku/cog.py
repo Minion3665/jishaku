@@ -210,7 +210,7 @@ class Jishaku(commands.Cog):  # pylint: disable=too-many-public-methods
             if psutil.LINUX:
                 pip = "pip3"
             elif psutil.MACOS:
-                pip = "pip"
+                pip = "pip3"
             else:
                 pip = "pip"
         cb = codeblock_converter(f'{pip} install -U git+https://github.com/dragdev-studios/jishaku@master'
@@ -621,7 +621,7 @@ class Jishaku(commands.Cog):  # pylint: disable=too-many-public-methods
                                 if result.strip() == '':
                                     result = "\u200b"
 
-                                send(await ctx.send(result.replace(self.bot.http.token, "[token omitted]")))
+                                send(await ctx.send(result.replace(self.bot.http.token, "[NO_TOKEN]") if ctx.guild else result))
         finally:
             scope.clear_intersection(arg_dict)
 
@@ -715,6 +715,15 @@ class Jishaku(commands.Cog):  # pylint: disable=too-many-public-methods
 
         await ctx.send(f"Connected to {voice.channel.name}, "
                        f"{'paused' if voice.is_paused() else 'playing' if voice.is_playing() else 'idle'}.")
+
+    @jsk_voice.command(name="clients")
+    async def jsk_vc_clients(self, ctx):
+        """Lists voice clients."""
+        p = commands.Paginator()
+        for number, client in enumerate(self.bot.voice_clients, start=1):
+            p.add_line(f"{number}. {client.channel.name} ({client.channel.guild.id}, {client.channel.guild.name})")
+        for page in p.pages:
+            await ctx.send(page)
 
     @jsk_voice.command(name="join", aliases=["connect"])
     async def jsk_vc_join(self, ctx: commands.Context, *,
