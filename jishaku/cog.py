@@ -165,11 +165,11 @@ class Jishaku(commands.Cog):  # pylint: disable=too-many-public-methods
 
                     summary.append("")  # blank line
             except:
-                summary.append("Was unable to get Psutil information.")
+                summary.append("Was unable to get psutil information.")
                 summary.append(" ")
 
         cache_summary = f"{len(self.bot.guilds)} guild(s), {len(list(self.bot.get_all_channels()))} channel(s)" \
-                        f" {len(self.bot.users)} user(s)"
+                        f" and {len(self.bot.users)} user(s)"
 
         if isinstance(self.bot, discord.AutoShardedClient):
             summary.append(f"This bot is automatically sharded and can see {cache_summary}.")
@@ -287,6 +287,7 @@ class Jishaku(commands.Cog):  # pylint: disable=too-many-public-methods
     async def jsk_load(self, ctx: commands.Context, *extensions: ExtensionConverter):
         """
         Loads or reloads the given extension names.
+        If a command is passed it will reload that command's cog.
 
         Reports any extensions that failed to load.
         """
@@ -353,7 +354,7 @@ class Jishaku(commands.Cog):  # pylint: disable=too-many-public-methods
 
     # Command-invocation commands
     @jsk.command(name="su")
-    async def jsk_su(self, ctx: commands.Context, target: discord.User, *, command_string: str):
+    async def jsk_su(self, ctx: commands.Context, target: typing.Union[discord.Member, discord.User], *, command_string: str):
         """
         Run a command as someone else.
 
@@ -542,6 +543,8 @@ class Jishaku(commands.Cog):  # pylint: disable=too-many-public-methods
 
         paginator = WrappedPaginator(prefix='```py', suffix='```', max_size=1985)
         for line in source_lines:
+            line = (line.replace('`', '\u200B`').replace('*', '\u200B*').replace('|', '\u200B|').replace('>', '\u200B>')
+                    .replace('_', '\u200B_'))
             paginator.add_line(line)
 
         interface = PaginatorInterface(ctx.bot, paginator, owner=ctx.author)
@@ -670,7 +673,7 @@ class Jishaku(commands.Cog):  # pylint: disable=too-many-public-methods
 
         async with ReplResponseReactor(ctx.message):
             with self.submit(ctx):
-                paginator = WrappedPaginator(prefix="```sh", max_size=1000)
+                paginator = WrappedPaginator(prefix="```sh", max_size=1500)
                 paginator.add_line(f"$ {argument.content}\n")
 
                 interface = PaginatorInterface(ctx.bot, paginator, owner=ctx.author)
@@ -722,6 +725,8 @@ class Jishaku(commands.Cog):  # pylint: disable=too-many-public-methods
         p = commands.Paginator()
         for number, client in enumerate(self.bot.voice_clients, start=1):
             p.add_line(f"{number}. {client.channel.name} ({client.channel.guild.id}, {client.channel.guild.name})")
+        if len(p.pages) == 0:
+            return await ctx.send("No connected voice clients.")
         for page in p.pages:
             await ctx.send(page)
 

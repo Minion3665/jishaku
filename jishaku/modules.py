@@ -20,11 +20,10 @@ from discord.ext import commands
 __all__ = ('find_extensions_in', 'resolve_extensions', 'package_version', 'ExtensionConverter')
 
 
-def find_extensions_in(path: typing.Union[str, pathlib.Path]) -> list:
+def find_extensions_in(path: typing.Union[str, pathlib.Path, commands.command]) -> list:
     """
     Tries to find things that look like bot extensions in a directory.
     """
-
     if not isinstance(path, pathlib.Path):
         path = pathlib.Path(path)
 
