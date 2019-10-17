@@ -12,6 +12,7 @@ Voice-related functions and classes.
 """
 
 import discord.opus
+import ctypes
 import discord.voice_client
 from discord.ext import commands
 
@@ -19,6 +20,10 @@ try:
     import youtube_dl
 except ImportError:
     youtube_dl = None
+try:
+    import psutil
+except ImportError:
+    psutil = None
 
 
 async def vc_check(ctx: commands.Context):  # pylint: disable=unused-argument
@@ -30,7 +35,16 @@ async def vc_check(ctx: commands.Context):  # pylint: disable=unused-argument
         raise commands.CheckFailure("voice cannot be used because PyNaCl is not loaded")
 
     if not discord.opus.is_loaded():
-        raise commands.CheckFailure("voice cannot be used because libopus is not loaded")
+        try:
+            if psutil:
+                if psutil.LINUX:
+                    discord.opus.load_opus(ctypes.util.find_library("opus"))
+                else:
+                    discord.opus.load_opus('libopus.so')
+        except:
+            raise commands.CheckFailure("voice cannot be used because libopus is not loaded")
+        else:
+            return True
 
     return True
 
@@ -42,7 +56,7 @@ async def connected_check(ctx: commands.Context):
 
     voice = ctx.guild.voice_client
 
-    if not voice or not voice.is_connected():
+    if not voice:
         raise commands.CheckFailure("Not connected to VC in this guild")
 
     return True

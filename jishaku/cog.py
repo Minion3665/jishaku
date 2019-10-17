@@ -80,6 +80,7 @@ class Jishaku(commands.Cog):  # pylint: disable=too-many-public-methods
         self.tasks = collections.deque()
         self.task_count: int = 0
         self.bot.old_help_command = bot.help_command
+        self.queue = []
 
     @property
     def scope(self):
@@ -868,6 +869,11 @@ class Jishaku(commands.Cog):  # pylint: disable=too-many-public-methods
 
         # remove embed maskers if present
         url = url.lstrip("<").rstrip(">")
+        # remove radio mode, if present
+        _url = url.split('&')
+        if len(_url) > 1:
+            if _url[-1].startswith('index='):
+                url = _url[0]  # removes list= too, if present
 
         voice.play(discord.PCMVolumeTransformer(BasicYouTubeDLSource(url)))
         await ctx.send(f"Playing in {voice.channel.name}.")
