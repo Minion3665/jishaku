@@ -69,18 +69,19 @@ class Jishaku(commands.Cog):  # pylint: disable=too-many-public-methods
     The cog that includes Jishaku's Discord-facing default functionality.
     """
 
-    load_time = datetime.datetime.now()
+    load_time = datetime.datetime.utcnow()
 
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: commands.Bot, scope):
         self.bot = bot
         self._scope = Scope()
         self.retain = JISHAKU_RETAIN
         self.last_result = None
-        self.start_time = datetime.datetime.now()
+        self.start_time = datetime.datetime.utcnow()
         self.tasks = collections.deque()
         self.task_count: int = 0
         self.bot.old_help_command = bot.help_command
         self.queue = []
+        self.SCOPE_PREFIX: str = scope
 
     @property
     def scope(self):
@@ -127,7 +128,7 @@ class Jishaku(commands.Cog):  # pylint: disable=too-many-public-methods
         return True
 
     @commands.group(name="jishaku", aliases=["jsk"], hidden=JISHAKU_HIDE,
-                    invoke_without_command=True, ignore_extra=False)
+                    invoke_without_command=True)
     async def jsk(self, ctx: commands.Context):
         """
         The Jishaku debug and diagnostic commands.
@@ -184,6 +185,23 @@ class Jishaku(commands.Cog):  # pylint: disable=too-many-public-methods
         await msg.edit(content="\n".join(summary))
 
     # Meta commands
+
+    @jsk.command(name="prefixrepl")
+    async def jsk_prefix_repl(self, ctx, *, toggle: typing.Union[bool, str] = None):
+        """Decides if vars should be prefixed in REPLs
+        e.g: _ctx vs ctx.
+        provide something thats not a bool to set it to that prefix.
+        cleared on reboot"""
+        if toggle is None:
+            await ctx.send(f"Prefix: {self.SCOPE_PREFIX}")
+        else:
+            if toggle is True:
+                self.SCOPE_PREFIX = '_'
+            elif toggle is False:
+                self. SCOPE_PREFIX = ''
+            else:
+                self.SCOPE_PREFIX = toggle
+            return await ctx.send("Done.")
 
     @jsk.command(name="embedhelp")
     async def jsk_help_toggle(self, ctx, minimal: bool = True):
@@ -537,7 +555,7 @@ class Jishaku(commands.Cog):  # pylint: disable=too-many-public-methods
         try:
             source_lines, _ = inspect.getsourcelines(command.callback)
         except (TypeError, OSError):
-            return await ctx.send(f"Was unable to retrieve the source for `{command}` for some reason.")
+            return await ctx.send(f"Was unable to retrieve the source for `{command}` for some reason. Is it saved?")
 
         # getsourcelines for some reason returns WITH line endings
         source_lines = ''.join(source_lines).split('\n')
@@ -586,7 +604,7 @@ class Jishaku(commands.Cog):  # pylint: disable=too-many-public-methods
         Direct evaluation of Python code.
         """
 
-        arg_dict = get_var_dict_from_ctx(ctx, SCOPE_PREFIX)
+        arg_dict = get_var_dict_from_ctx(ctx, self.SCOPE_PREFIX)
         arg_dict["_"] = self.last_result
 
         scope = self.scope
@@ -635,7 +653,7 @@ class Jishaku(commands.Cog):  # pylint: disable=too-many-public-methods
         Evaluation of Python code with inspect information.
         """
 
-        arg_dict = get_var_dict_from_ctx(ctx, SCOPE_PREFIX)
+        arg_dict = get_var_dict_from_ctx(ctx, self.SCOPE_PREFIX)
         arg_dict["_"] = self.last_result
 
         scope = self.scope
@@ -884,4 +902,4 @@ def setup(bot: commands.Bot):
     Adds the Jishaku cog to the bot.
     """
 
-    bot.add_cog(Jishaku(bot=bot))
+    bot.add_cog(Jishaku(bot=bot, scope=SCOPE_PREFIX))
