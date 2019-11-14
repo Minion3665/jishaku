@@ -250,7 +250,7 @@ class Jishaku(commands.Cog):  # pylint: disable=too-many-public-methods
         """
         Toggles hiding Jishaku from the help command.
         """
-        self.jsk.hidden = True if not self.jsk.hidden else False
+        self.jsk.hidden = not self.jsk.hidden
         if mode is not None:
             self.jsk.hidden = mode
         new = {
